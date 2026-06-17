@@ -53,6 +53,30 @@ public class Ship {
     @Column(name = "metacentric_height_design", nullable = false, precision = 8, scale = 4)
     private BigDecimal metacentricHeightDesign = new BigDecimal("0.8");
 
+    @Column(name = "ship_category", length = 20)
+    private String shipCategory = "ANCIENT";
+
+    @Column(name = "ship_family", length = 50)
+    private String shipFamily = "沙船";
+
+    @Column(name = "ship_variant", length = 50)
+    private String shipVariant;
+
+    @Column(name = "block_coefficient", precision = 10, scale = 4)
+    private BigDecimal blockCoefficient = new BigDecimal("0.65");
+
+    @Column(name = "roll_radius_coefficient", precision = 10, scale = 4)
+    private BigDecimal rollRadiusCoefficient = new BigDecimal("0.40");
+
+    @Column(name = "bow_height", precision = 10, scale = 4)
+    private BigDecimal bowHeight;
+
+    @Column(name = "watertight_bulkheads")
+    private Integer watertightBulkheads;
+
+    @Column(name = "historical_period", length = 50)
+    private String historicalPeriod;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
