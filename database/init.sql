@@ -448,6 +448,7 @@ UPDATE ships SET
 WHERE ship_type = '方艄沙船' AND ship_category IS NULL;
 
 -- 初始化新增古代船型：福船（明代福建尖底海船）
+-- 文献考证：泉州宋代沉船Cb≈0.44，福船尖底折减系数0.85
 INSERT INTO ships (name, ship_type, ship_category, ship_family, ship_variant, spectrum_key,
                    length_overall, breadth_molded, depth_molded, design_draft, 
                    displacement, lightship_weight, deadweight_tons, 
@@ -455,14 +456,15 @@ INSERT INTO ships (name, ship_type, ship_category, ship_family, ship_variant, sp
                    bow_height, stern_height, watertight_bulkheads, historical_period)
 VALUES 
 ('明代福船-001', '福船', 'ANCIENT', '福船', '小型福船', 'fuchuan-small',
- 33.00, 7.50, 4.00, 2.80, 380.00, 170.00, 210.00, 1.10, 0.52, 0.38, 5.20, 4.80, 12, '明代'),
+ 33.00, 7.50, 4.00, 2.80, 415.00, 185.00, 230.00, 1.10, 0.48, 0.38, 5.20, 4.80, 12, '明代'),
 ('明代福船-002', '福船', 'ANCIENT', '福船', '中型福船', 'fuchuan-medium',
- 42.00, 9.00, 5.00, 3.50, 650.00, 290.00, 360.00, 1.15, 0.50, 0.39, 6.50, 5.80, 14, '明代'),
+ 42.00, 9.00, 5.00, 3.50, 760.00, 340.00, 420.00, 1.15, 0.46, 0.39, 6.50, 5.80, 14, '明代'),
 ('明代宝船-001', '福船', 'ANCIENT', '福船', '大型福船（宝船级）', 'fuchuan-large',
- 60.00, 13.00, 6.50, 4.80, 1800.00, 800.00, 1000.00, 1.20, 0.48, 0.40, 8.50, 7.50, 16, '明代郑和下西洋')
+ 60.00, 13.00, 6.50, 4.80, 1600.00, 700.00, 900.00, 0.65, 0.44, 0.40, 8.50, 7.50, 16, '明代郑和下西洋')
 ON CONFLICT DO NOTHING;
 
 -- 初始化新增古代船型：广船（明代广东尖底海船）
+-- 文献：广船Cb=0.55-0.62，介于沙船和福船之间
 INSERT INTO ships (name, ship_type, ship_category, ship_family, ship_variant, spectrum_key,
                    length_overall, breadth_molded, depth_molded, design_draft, 
                    displacement, lightship_weight, deadweight_tons, 
@@ -470,12 +472,13 @@ INSERT INTO ships (name, ship_type, ship_category, ship_family, ship_variant, sp
                    bow_height, stern_height, watertight_bulkheads, historical_period)
 VALUES 
 ('明代广船-001', '广船', 'ANCIENT', '广船', '小型广船', 'guangchuan-small',
- 28.00, 6.50, 3.80, 2.60, 280.00, 130.00, 150.00, 1.05, 0.48, 0.37, 4.50, 4.20, 10, '明代'),
+ 28.00, 6.50, 3.80, 2.60, 370.00, 160.00, 210.00, 1.05, 0.58, 0.37, 4.50, 4.20, 10, '明代'),
 ('明代广船-002', '广船', 'ANCIENT', '广船', '中型广船', 'guangchuan-medium',
- 36.00, 8.00, 4.60, 3.20, 480.00, 220.00, 260.00, 1.08, 0.46, 0.38, 5.80, 5.20, 12, '明代')
+ 36.00, 8.00, 4.60, 3.20, 680.00, 290.00, 390.00, 1.08, 0.56, 0.38, 5.80, 5.20, 12, '明代')
 ON CONFLICT DO NOTHING;
 
 -- 初始化现代船型：散货船
+-- 标准：IMO IS Code 2008, IACS UR S1/S25, Lloyd's Register典型尺度
 INSERT INTO ships (name, ship_type, ship_category, ship_family, ship_variant, spectrum_key,
                    length_overall, breadth_molded, depth_molded, design_draft, 
                    displacement, lightship_weight, deadweight_tons, 
@@ -483,11 +486,11 @@ INSERT INTO ships (name, ship_type, ship_category, ship_family, ship_variant, sp
                    bow_height, stern_height, watertight_bulkheads, historical_period)
 VALUES 
 ('现代散货船-Handysize', '散货船', 'MODERN', '散货船', 'Handysize (35000DWT)', 'modern-bulk-handysize',
- 180.00, 30.00, 15.00, 10.00, 45000.00, 10000.00, 35000.00, 1.50, 0.82, 0.45, 18.00, 16.00, 7, '现代'),
+ 169.00, 27.20, 14.20, 9.50, 46500.00, 11500.00, 35000.00, 1.00, 0.82, 0.40, 16.00, 14.00, 7, '现代'),
 ('现代散货船-Panamax', '散货船', 'MODERN', '散货船', 'Panamax (75000DWT)', 'modern-bulk-panamax',
- 225.00, 32.20, 18.50, 12.50, 90000.00, 15000.00, 75000.00, 1.45, 0.83, 0.45, 22.00, 20.00, 9, '现代'),
+ 225.00, 32.20, 19.20, 12.50, 97000.00, 22000.00, 75000.00, 0.90, 0.83, 0.40, 22.00, 19.00, 9, '现代'),
 ('现代散货船-Capesize', '散货船', 'MODERN', '散货船', 'Capesize (180000DWT)', 'modern-bulk-capesize',
- 290.00, 45.00, 24.00, 16.50, 220000.00, 40000.00, 180000.00, 1.35, 0.84, 0.46, 28.00, 25.00, 11, '现代')
+ 292.00, 45.00, 24.80, 16.50, 230000.00, 50000.00, 180000.00, 0.80, 0.84, 0.40, 28.00, 24.00, 11, '现代')
 ON CONFLICT DO NOTHING;
 
 -- 为福船初始化货舱（小型福船，6个货舱）

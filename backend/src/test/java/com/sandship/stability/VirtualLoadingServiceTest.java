@@ -65,7 +65,7 @@ class VirtualLoadingServiceTest {
         hold2 = buildTestHold(2, "第二货舱", new BigDecimal("60.0"), new BigDecimal("120.0"));
         hold3 = buildTestHold(3, "第三货舱", new BigDecimal("40.0"), new BigDecimal("80.0"));
         grainCargo = buildTestCargoType("GRAIN", "粮食", new BigDecimal("0.75"), "#DEB887");
-        teaCargo = buildTestCargoType("TEA", "茶叶", new BigDecimal("0.30"), "#228B22");
+        teaCargo = buildTestCargoType("TEA", "茶叶", new BigDecimal("0.45"), "#228B22");
         porcelainCargo = buildTestCargoType("PORCELAIN", "瓷器", new BigDecimal("1.50"), "#E6E6FA");
     }
 

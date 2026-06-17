@@ -828,11 +828,19 @@ const handleDragStart = (event, cargo) => {
   event.dataTransfer.effectAllowed = 'copy'
   event.dataTransfer.setData('text/plain', JSON.stringify(cargo))
   event.target.classList.add('dragging')
+
+  const ghostEl = document.createElement('div')
+  ghostEl.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 16px;background:#409EFF;color:#fff;border-radius:6px;font-size:14px;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,0.3);'
+  ghostEl.innerHTML = `<span style="width:12px;height:12px;border-radius:3px;background:${cargo.color}"></span><span>${cargo.name}</span>`
+  document.body.appendChild(ghostEl)
+  event.dataTransfer.setDragImage(ghostEl, 40, 20)
+  setTimeout(() => document.body.removeChild(ghostEl), 0)
 }
 
 const handleDragEnd = (event) => {
   draggedCargo.value = null
   dragOverHoldId.value = null
+  document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'))
   event.target.classList.remove('dragging')
 }
 
@@ -860,11 +868,23 @@ const handleDrop = async (event, holdId) => {
   }
 
   const cargo = draggedCargo.value
-  const defaultWeight = Math.min(10, cargo.available)
+  const hold = cargoHolds.value.find(h => h.id === holdId)
+  const currentWeight = getHoldWeight(holdId)
+  const remainingCapacity = hold ? (hold.maxWeight - currentWeight) : 0
+  const defaultWeight = Math.min(
+    Math.max(5, Math.round(remainingCapacity * 0.2)),
+    cargo.available || 999,
+    remainingCapacity
+  )
+
+  if (defaultWeight <= 0) {
+    ElMessage.warning(`${hold?.holdName || '该货舱'}已满，无法继续装载`)
+    return
+  }
 
   try {
     await executeLoadAction(holdId, cargo.id, defaultWeight, 'LOAD')
-    ElMessage.success(`已装载 ${cargo.name} ${defaultWeight} t 到 ${cargoHolds.value.find(h => h.id === holdId)?.holdName}`)
+    ElMessage.success(`已装载 ${cargo.name} ${defaultWeight} t 到 ${hold?.holdName}`)
   } catch (e) {
     ElMessage.error('装载失败: ' + (e.message || '未知错误'))
   }

@@ -24,10 +24,19 @@ import java.util.stream.Collectors;
 public class StormSimulationService {
 
     private static final double GRAVITY = 9.81;
+    private static final double AIR_DENSITY = 1.225;
+    private static final double SEAWATER_DENSITY = 1.025;
     private static final double DEFAULT_ROLL_RADIUS_COEFFICIENT = 0.35;
-    private static final double CAPSIZING_ROLL_THRESHOLD = 50.0;
+    private static final double CAPSIZING_ROLL_THRESHOLD = 40.0;
     private static final double CAPSIZING_GM_THRESHOLD = 0.05;
     private static final int DEFAULT_TIME_STEP_MINUTES = 1;
+
+    private static final Map<String, double[]> STORM_SEVERITY_PARAMS = Map.of(
+            "TROPICAL_STORM", new double[]{3.0, 5.0, 17.0, 25.0, 7.0, 12.0},
+            "SEVERE_STORM",   new double[]{5.0, 8.0, 25.0, 40.0, 9.0, 14.0},
+            "TYPHOON",        new double[]{8.0, 14.0, 40.0, 60.0, 10.0, 16.0},
+            "HURRICANE",      new double[]{14.0, 20.0, 60.0, 80.0, 12.0, 18.0}
+    );
 
     @Autowired
     private StabilitySimulatorService stabilitySimulatorService;
@@ -61,11 +70,16 @@ public class StormSimulationService {
             int iterations = request.getMonteCarloIterations() != null
                     ? request.getMonteCarloIterations() : 10000;
 
-            double rollStdDev = waveHeight * 3.5;
+            double rollStdDev = waveHeight * 1.8;
 
             double periodRatio = wavePeriod / rollPeriod.doubleValue();
             boolean parametricRollRisk = periodRatio > 0.8 && periodRatio < 1.2;
             double parametricAmplification = parametricRollRisk ? 1.8 : 1.0;
+
+            double windPressure = 0.5 * AIR_DENSITY * windSpeed * windSpeed;
+            double windLateralArea = ship.getLengthOverall().doubleValue() * ship.getBowHeight().doubleValue() * 0.6;
+            double windHeelArm = (windPressure * windLateralArea * ship.getBowHeight().doubleValue() * 0.5)
+                    / (ship.getDisplacement().doubleValue() * SEAWATER_DENSITY * GRAVITY);
 
             int capsizingCount = 0;
             double maxRollAngle = 0.0;
@@ -76,11 +90,23 @@ public class StormSimulationService {
             for (int i = 0; i < iterations; i++) {
                 double rollAngle = random.nextGaussian() * rollStdDev * parametricAmplification;
 
-                double windHeelMoment = windSpeed * windSpeed * 0.001 * ship.getBreadthMolded().doubleValue();
-                double windHeelAngle = windHeelMoment / (baseGM.doubleValue() * ship.getDisplacement().doubleValue() * GRAVITY);
+                double windHeelAngle = windHeelArm / Math.max(baseGM.doubleValue(), 0.1);
                 rollAngle += windHeelAngle;
 
-                double dynamicGM = baseGM.doubleValue() * (1.0 - FastMath.abs(rollAngle) / 90.0 * 0.7);
+                double rollAngleDeg = FastMath.abs(rollAngle);
+                double dynamicGM;
+                if (rollAngleDeg < 15.0) {
+                    dynamicGM = baseGM.doubleValue() * (1.0 - rollAngleDeg / 90.0 * 0.15);
+                } else if (rollAngleDeg < 30.0) {
+                    double factor = (rollAngleDeg - 15.0) / 15.0;
+                    dynamicGM = baseGM.doubleValue() * (0.975 - factor * 0.25);
+                } else if (rollAngleDeg < 45.0) {
+                    double factor = (rollAngleDeg - 30.0) / 15.0;
+                    dynamicGM = baseGM.doubleValue() * (0.725 - factor * 0.35);
+                } else {
+                    double factor = Math.min((rollAngleDeg - 45.0) / 45.0, 1.0);
+                    dynamicGM = baseGM.doubleValue() * (0.375 - factor * 0.5);
+                }
                 dynamicGM = Math.max(dynamicGM, -0.5);
 
                 if (FastMath.abs(rollAngle) > maxRollAngle) {
@@ -225,7 +251,7 @@ public class StormSimulationService {
     }
 
     private double calculateRightingArmLoss(double waveHeight, boolean parametricRollRisk) {
-        double baseLoss = waveHeight * 3.5;
+        double baseLoss = waveHeight * 2.0;
         if (parametricRollRisk) {
             baseLoss *= 1.5;
         }
@@ -235,7 +261,10 @@ public class StormSimulationService {
     private double calculateWeatherHelmEffect(double windSpeed, Ship ship) {
         double breadth = ship.getBreadthMolded().doubleValue();
         double length = ship.getLengthOverall().doubleValue();
-        return (windSpeed * windSpeed * breadth * 0.0005) / (length * 0.1);
+        double windPressure = 0.5 * AIR_DENSITY * windSpeed * windSpeed;
+        double lateralArea = length * ship.getBowHeight().doubleValue() * 0.6;
+        return (windPressure * lateralArea * 0.5 * breadth)
+                / (ship.getDisplacement().doubleValue() * SEAWATER_DENSITY * GRAVITY * length * 0.1);
     }
 
     private double calculateBroachingProbability(double waveHeight, double wavePeriod, double rollPeriod) {
@@ -255,8 +284,11 @@ public class StormSimulationService {
         Random random = new Random();
 
         double currentRoll = 0.0;
-        double windHeelMoment = windSpeed * windSpeed * 0.001 * ship.getBreadthMolded().doubleValue();
-        double windHeelAngle = windHeelMoment / (baseGM * ship.getDisplacement().doubleValue() * GRAVITY);
+        double windPressure = 0.5 * AIR_DENSITY * windSpeed * windSpeed;
+        double windLateralArea = ship.getLengthOverall().doubleValue() * ship.getBowHeight().doubleValue() * 0.6;
+        double windHeelArm = (windPressure * windLateralArea * ship.getBowHeight().doubleValue() * 0.5)
+                / (ship.getDisplacement().doubleValue() * SEAWATER_DENSITY * GRAVITY);
+        double windHeelAngle = windHeelArm / Math.max(baseGM, 0.1);
 
         for (int minute = 0; minute < durationMinutes; minute += DEFAULT_TIME_STEP_MINUTES) {
             double randomComponent = random.nextGaussian() * rollStdDev * parametricAmplification * 0.3;
@@ -282,8 +314,21 @@ public class StormSimulationService {
         for (int i = 0; i < rollAngleSeries.size() && i * DEFAULT_TIME_STEP_MINUTES < durationMinutes; i++) {
             Map<String, Object> rollPoint = rollAngleSeries.get(i);
             double rollAngle = ((Number) rollPoint.get("rollAngle")).doubleValue();
+            double rollAngleDeg = FastMath.abs(rollAngle);
 
-            double dynamicGM = baseGM * (1.0 - FastMath.abs(rollAngle) / 90.0 * 0.7);
+            double dynamicGM;
+            if (rollAngleDeg < 15.0) {
+                dynamicGM = baseGM * (1.0 - rollAngleDeg / 90.0 * 0.15);
+            } else if (rollAngleDeg < 30.0) {
+                double factor = (rollAngleDeg - 15.0) / 15.0;
+                dynamicGM = baseGM * (0.975 - factor * 0.25);
+            } else if (rollAngleDeg < 45.0) {
+                double factor = (rollAngleDeg - 30.0) / 15.0;
+                dynamicGM = baseGM * (0.725 - factor * 0.35);
+            } else {
+                double factor = Math.min((rollAngleDeg - 45.0) / 45.0, 1.0);
+                dynamicGM = baseGM * (0.375 - factor * 0.5);
+            }
             dynamicGM = Math.max(dynamicGM, -0.3);
 
             Map<String, Object> point = new LinkedHashMap<>();
