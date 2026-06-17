@@ -5,7 +5,7 @@ import com.sandship.stability.config.StabilityConfig;
 import com.sandship.stability.dto.*;
 import com.sandship.stability.entity.*;
 import com.sandship.stability.repository.*;
-import com.sandship.stability.virtual_loading.VirtualLoadingService;
+import com.sandship.stability.vr_loading.VRLoadingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -20,6 +20,7 @@ import org.springframework.data.domain.PageImpl;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
+import java.util.concurrent.Executor;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -47,8 +48,11 @@ class VirtualLoadingServiceTest {
     @Mock
     private ShipParamsConfig shipParamsConfig;
 
+    @Mock
+    private Executor stabilityExecutor;
+
     @InjectMocks
-    private VirtualLoadingService virtualLoadingService;
+    private VRLoadingService vrLoadingService;
 
     private Ship testShip;
     private CargoHold hold1;
@@ -136,7 +140,7 @@ class VirtualLoadingServiceTest {
             when(stabilityConfig.getGmWarningThreshold()).thenReturn(new BigDecimal("0.5"));
             when(stabilityConfig.getGmDangerThreshold()).thenReturn(new BigDecimal("0.3"));
 
-            VirtualLoadingResultDTO result = virtualLoadingService.createSession(request);
+            VirtualLoadingResultDTO result = vrLoadingService.createSession(request);
 
             assertNotNull(result);
             assertNotNull(result.getId());
@@ -186,7 +190,7 @@ class VirtualLoadingServiceTest {
             loadRequest.setCargoTypeId(grainCargo.getId());
             loadRequest.setWeightChange(new BigDecimal("20.0"));
 
-            VirtualLoadingResultDTO result = virtualLoadingService.executeAction(loadRequest);
+            VirtualLoadingResultDTO result = vrLoadingService.executeAction(loadRequest);
 
             assertNotNull(result);
             assertTrue(result.getCurrentGm().compareTo(initialGm) <= 0,
@@ -267,11 +271,11 @@ class VirtualLoadingServiceTest {
             loadLightLower.setCargoTypeId(teaCargo.getId());
             loadLightLower.setWeightChange(new BigDecimal("10.0"));
 
-            virtualLoadingService.executeAction(loadHeavyLower);
-            VirtualLoadingResultDTO goodResult = virtualLoadingService.executeAction(loadLightUpper);
+            vrLoadingService.executeAction(loadHeavyLower);
+            VirtualLoadingResultDTO goodResult = vrLoadingService.executeAction(loadLightUpper);
 
-            virtualLoadingService.executeAction(loadHeavyUpper);
-            VirtualLoadingResultDTO badResult = virtualLoadingService.executeAction(loadLightLower);
+            vrLoadingService.executeAction(loadHeavyUpper);
+            VirtualLoadingResultDTO badResult = vrLoadingService.executeAction(loadLightLower);
 
             assertNotNull(goodResult);
             assertNotNull(badResult);
@@ -318,7 +322,7 @@ class VirtualLoadingServiceTest {
             unloadRequest.setCargoTypeId(grainCargo.getId());
             unloadRequest.setWeightChange(new BigDecimal("-15.0"));
 
-            VirtualLoadingResultDTO result = virtualLoadingService.executeAction(unloadRequest);
+            VirtualLoadingResultDTO result = vrLoadingService.executeAction(unloadRequest);
 
             assertNotNull(result);
             assertTrue(result.getCurrentGm().compareTo(loadedGm) > 0,
@@ -362,7 +366,7 @@ class VirtualLoadingServiceTest {
             resetRequest.setAction("RESET_HOLD");
             resetRequest.setHoldId(hold1.getId());
 
-            VirtualLoadingResultDTO result = virtualLoadingService.executeAction(resetRequest);
+            VirtualLoadingResultDTO result = vrLoadingService.executeAction(resetRequest);
 
             assertNotNull(result);
             assertTrue(result.getMessage().contains("已重置货舱"),
@@ -399,7 +403,7 @@ class VirtualLoadingServiceTest {
             resetRequest.setSessionId(sessionId);
             resetRequest.setAction("RESET_ALL");
 
-            VirtualLoadingResultDTO result = virtualLoadingService.executeAction(resetRequest);
+            VirtualLoadingResultDTO result = vrLoadingService.executeAction(resetRequest);
 
             assertNotNull(result);
             assertTrue(result.getMessage().contains("已重置所有货舱"),
@@ -447,7 +451,7 @@ class VirtualLoadingServiceTest {
             loadRequest.setCargoTypeId(grainCargo.getId());
             loadRequest.setWeightChange(new BigDecimal("10.0"));
 
-            VirtualLoadingResultDTO result = virtualLoadingService.executeAction(loadRequest);
+            VirtualLoadingResultDTO result = vrLoadingService.executeAction(loadRequest);
 
             assertNotNull(result);
             assertNotNull(result.getMessage());
@@ -487,7 +491,7 @@ class VirtualLoadingServiceTest {
             loadRequest.setCargoTypeId(teaCargo.getId());
             loadRequest.setWeightChange(new BigDecimal("60.0"));
 
-            VirtualLoadingResultDTO result = virtualLoadingService.executeAction(loadRequest);
+            VirtualLoadingResultDTO result = vrLoadingService.executeAction(loadRequest);
 
             assertNotNull(result);
             assertTrue(result.getMessage().contains("超过货舱容积") || result.getMessage().contains("超过"),
@@ -515,7 +519,7 @@ class VirtualLoadingServiceTest {
             loadRequest.setWeightChange(new BigDecimal("-10.0"));
 
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-                virtualLoadingService.executeAction(loadRequest);
+                vrLoadingService.executeAction(loadRequest);
             });
 
             assertTrue(exception.getMessage().contains("必须为正数") || exception.getMessage().contains("重量"),
@@ -543,7 +547,7 @@ class VirtualLoadingServiceTest {
             unloadRequest.setWeightChange(new BigDecimal("10.0"));
 
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-                virtualLoadingService.executeAction(unloadRequest);
+                vrLoadingService.executeAction(unloadRequest);
             });
 
             assertTrue(exception.getMessage().contains("必须为负数") || exception.getMessage().contains("重量"),
@@ -579,7 +583,7 @@ class VirtualLoadingServiceTest {
             unloadRequest.setCargoTypeId(grainCargo.getId());
             unloadRequest.setWeightChange(new BigDecimal("-5.0"));
 
-            VirtualLoadingResultDTO result = virtualLoadingService.executeAction(unloadRequest);
+            VirtualLoadingResultDTO result = vrLoadingService.executeAction(unloadRequest);
 
             assertNotNull(result);
             assertTrue(result.getMessage().contains("没有") || result.getMessage().contains("不存在"),
@@ -602,7 +606,7 @@ class VirtualLoadingServiceTest {
             when(sessionRepository.findById(fakeSessionId)).thenReturn(Optional.empty());
 
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-                virtualLoadingService.executeAction(request);
+                vrLoadingService.executeAction(request);
             });
 
             assertTrue(exception.getMessage().contains("会话不存在"),
@@ -626,7 +630,7 @@ class VirtualLoadingServiceTest {
             request.setAction("LOAD");
 
             IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-                virtualLoadingService.executeAction(request);
+                vrLoadingService.executeAction(request);
             });
 
             assertTrue(exception.getMessage().contains("已关闭") || exception.getMessage().contains("无法"),
@@ -651,7 +655,7 @@ class VirtualLoadingServiceTest {
             request.setAction("INVALID_ACTION");
 
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-                virtualLoadingService.executeAction(request);
+                vrLoadingService.executeAction(request);
             });
 
             assertTrue(exception.getMessage().contains("不支持") || exception.getMessage().contains("操作类型"),
@@ -671,7 +675,7 @@ class VirtualLoadingServiceTest {
             when(shipRepository.findById(fakeShipId)).thenReturn(Optional.empty());
 
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-                virtualLoadingService.createSession(request);
+                vrLoadingService.createSession(request);
             });
 
             assertTrue(exception.getMessage().contains("船舶不存在"),
@@ -698,7 +702,7 @@ class VirtualLoadingServiceTest {
             request.setWeightChange(new BigDecimal("10.0"));
 
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-                virtualLoadingService.executeAction(request);
+                vrLoadingService.executeAction(request);
             });
 
             assertTrue(exception.getMessage().contains("不能为空"),
@@ -734,7 +738,7 @@ class VirtualLoadingServiceTest {
             loadRequest.setCargoTypeId(grainCargo.getId());
             loadRequest.setWeightChange(hold1.getMaxWeight());
 
-            VirtualLoadingResultDTO result = virtualLoadingService.executeAction(loadRequest);
+            VirtualLoadingResultDTO result = vrLoadingService.executeAction(loadRequest);
 
             assertNotNull(result);
             assertTrue(result.getMessage().contains("成功装载"),
@@ -765,7 +769,7 @@ class VirtualLoadingServiceTest {
                     .thenReturn(Arrays.asList(hold1, hold2, hold3));
             when(cargoTypeRepository.findById(any())).thenReturn(Optional.of(grainCargo));
 
-            VirtualLoadingResultDTO result = virtualLoadingService.getSession(sessionId);
+            VirtualLoadingResultDTO result = vrLoadingService.getSession(sessionId);
 
             assertNotNull(result);
             assertEquals(sessionId, result.getId());
@@ -780,7 +784,7 @@ class VirtualLoadingServiceTest {
             when(sessionRepository.findById(fakeId)).thenReturn(Optional.empty());
 
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-                virtualLoadingService.getSession(fakeId);
+                vrLoadingService.getSession(fakeId);
             });
 
             assertTrue(exception.getMessage().contains("不存在"));
@@ -803,7 +807,7 @@ class VirtualLoadingServiceTest {
             when(sessionRepository.findByIsPublicTrueOrderByCreatedAtDesc(any()))
                     .thenReturn(page);
 
-            Page<VirtualLoadingResultDTO> result = virtualLoadingService.getPublicSessions(0, 10);
+            Page<VirtualLoadingResultDTO> result = vrLoadingService.getPublicSessions(0, 10);
 
             assertNotNull(result);
             assertEquals(2, result.getTotalElements());
@@ -823,7 +827,7 @@ class VirtualLoadingServiceTest {
             when(sessionRepository.save(any(VirtualLoadingSession.class)))
                     .thenReturn(session);
 
-            assertDoesNotThrow(() -> virtualLoadingService.closeSession(sessionId));
+            assertDoesNotThrow(() -> vrLoadingService.closeSession(sessionId));
             verify(sessionRepository, times(1)).save(any(VirtualLoadingSession.class));
         }
 
@@ -834,7 +838,7 @@ class VirtualLoadingServiceTest {
             when(sessionRepository.findById(fakeId)).thenReturn(Optional.empty());
 
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-                virtualLoadingService.closeSession(fakeId);
+                vrLoadingService.closeSession(fakeId);
             });
 
             assertTrue(exception.getMessage().contains("不存在"));
@@ -857,7 +861,7 @@ class VirtualLoadingServiceTest {
             when(sessionRepository.save(any(VirtualLoadingSession.class)))
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
-            VirtualLoadingResultDTO result = virtualLoadingService.cloneSession(sessionId, "克隆的会话");
+            VirtualLoadingResultDTO result = vrLoadingService.cloneSession(sessionId, "克隆的会话");
 
             assertNotNull(result);
             assertEquals("克隆的会话", result.getSessionName());

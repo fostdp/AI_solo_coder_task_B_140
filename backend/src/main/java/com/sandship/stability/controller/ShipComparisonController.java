@@ -4,7 +4,8 @@ import com.sandship.stability.dto.ApiResponse;
 import com.sandship.stability.dto.ShipComparisonRequest;
 import com.sandship.stability.dto.ShipComparisonResultDTO;
 import com.sandship.stability.dto.ShipDTO;
-import com.sandship.stability.ship_comparison.ShipComparisonService;
+import com.sandship.stability.ship_comparator.EraComparatorService;
+import com.sandship.stability.ship_comparator.ShipComparatorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,14 +24,22 @@ import java.util.stream.Collectors;
 public class ShipComparisonController {
 
     @Autowired
-    private ShipComparisonService shipComparisonService;
+    private ShipComparatorService shipComparatorService;
+
+    @Autowired
+    private EraComparatorService eraComparatorService;
 
     @PostMapping("/compare")
     @Operation(summary = "执行多船对比", description = "对多艘船舶的稳性指标进行对比分析，生成综合排名")
     public ApiResponse<ShipComparisonResultDTO> compareShips(
             @Valid @RequestBody @Parameter(description = "对比请求参数") ShipComparisonRequest request) {
         try {
-            ShipComparisonResultDTO result = shipComparisonService.compareShips(request);
+            ShipComparisonResultDTO result;
+            if (eraComparatorService.isCrossEraRequest(request)) {
+                result = eraComparatorService.compareAncientVsModern(request);
+            } else {
+                result = shipComparatorService.compareShips(request);
+            }
             return ApiResponse.success("船型对比完成", result);
         } catch (Exception e) {
             return ApiResponse.error("船型对比失败: " + e.getMessage());
@@ -42,7 +51,7 @@ public class ShipComparisonController {
     public ApiResponse<List<ShipComparisonResultDTO>> getComparisonHistory(
             @RequestParam(defaultValue = "10") @Parameter(description = "返回记录数量，0表示返回全部") int limit) {
         try {
-            List<ShipComparisonResultDTO> history = shipComparisonService.getComparisonHistory(limit);
+            List<ShipComparisonResultDTO> history = shipComparatorService.getComparisonHistory(limit);
             return ApiResponse.success(history);
         } catch (Exception e) {
             return ApiResponse.error("获取对比历史失败: " + e.getMessage());
@@ -53,7 +62,7 @@ public class ShipComparisonController {
     @Operation(summary = "获取可对比船舶列表", description = "获取所有可用于对比的船舶信息，按分类和船型分组返回")
     public ApiResponse<Map<String, Map<String, List<ShipDTO>>>> getAvailableShips() {
         try {
-            List<ShipDTO> ships = shipComparisonService.getAvailableShips();
+            List<ShipDTO> ships = shipComparatorService.getAvailableShips();
 
             Map<String, Map<String, List<ShipDTO>>> grouped = ships.stream()
                     .collect(Collectors.groupingBy(
@@ -74,7 +83,7 @@ public class ShipComparisonController {
     public ApiResponse<ShipComparisonResultDTO> getComparisonById(
             @PathVariable @Parameter(description = "对比记录ID") UUID id) {
         try {
-            ShipComparisonResultDTO result = shipComparisonService.getComparisonById(id);
+            ShipComparisonResultDTO result = shipComparatorService.getComparisonById(id);
             return ApiResponse.success(result);
         } catch (IllegalArgumentException e) {
             return ApiResponse.error(e.getMessage());
@@ -88,7 +97,7 @@ public class ShipComparisonController {
     public ApiResponse<Void> deleteComparison(
             @PathVariable @Parameter(description = "对比记录ID") UUID id) {
         try {
-            shipComparisonService.deleteComparison(id);
+            shipComparatorService.deleteComparison(id);
             return ApiResponse.success("对比记录已删除", null);
         } catch (IllegalArgumentException e) {
             return ApiResponse.error(e.getMessage());

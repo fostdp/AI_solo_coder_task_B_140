@@ -28,6 +28,13 @@ public class ShipComparisonResultDTO {
     private List<ShipComparisonItem> comparisonItems;
     private List<String> rankingSummaryList;
 
+    private Boolean crossEraComparison = false;
+    private Integer ancientCount;
+    private Integer modernCount;
+    private Map<String, BigDecimal> ancientAverageMetrics;
+    private Map<String, BigDecimal> modernAverageMetrics;
+    private Map<String, BigDecimal> eraImprovementRatio;
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor

@@ -1,7 +1,7 @@
 package com.sandship.stability.controller;
 
 import com.sandship.stability.dto.*;
-import com.sandship.stability.virtual_loading.VirtualLoadingService;
+import com.sandship.stability.vr_loading.VRLoadingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,14 +19,14 @@ import java.util.UUID;
 public class VirtualLoadingController {
 
     @Autowired
-    private VirtualLoadingService virtualLoadingService;
+    private VRLoadingService vrLoadingService;
 
     @PostMapping("/session")
     @Operation(summary = "创建新的虚拟装载会话")
     public ApiResponse<VirtualLoadingResultDTO> createSession(
             @Valid @RequestBody VirtualLoadingCreateRequest request) {
         try {
-            VirtualLoadingResultDTO result = virtualLoadingService.createSession(request);
+            VirtualLoadingResultDTO result = vrLoadingService.createSession(request);
             return ApiResponse.success("会话创建成功", result);
         } catch (IllegalArgumentException e) {
             return ApiResponse.error(e.getMessage());
@@ -40,7 +40,7 @@ public class VirtualLoadingController {
     public ApiResponse<VirtualLoadingResultDTO> executeAction(
             @Valid @RequestBody VirtualLoadingActionRequest request) {
         try {
-            VirtualLoadingResultDTO result = virtualLoadingService.executeAction(request);
+            VirtualLoadingResultDTO result = vrLoadingService.executeAction(request);
             return ApiResponse.success(result.getMessage(), result);
         } catch (IllegalArgumentException | IllegalStateException e) {
             return ApiResponse.error(e.getMessage());
@@ -54,7 +54,7 @@ public class VirtualLoadingController {
     public ApiResponse<VirtualLoadingResultDTO> getSession(
             @Parameter(description = "会话ID") @PathVariable UUID id) {
         try {
-            VirtualLoadingResultDTO result = virtualLoadingService.getSession(id);
+            VirtualLoadingResultDTO result = vrLoadingService.getSession(id);
             return ApiResponse.success(result);
         } catch (IllegalArgumentException e) {
             return ApiResponse.error(e.getMessage());
@@ -68,7 +68,7 @@ public class VirtualLoadingController {
     public ApiResponse<List<VirtualLoadingResultDTO>> getActiveSessions(
             @Parameter(description = "船舶ID") @PathVariable UUID shipId) {
         try {
-            List<VirtualLoadingResultDTO> results = virtualLoadingService.getActiveSessions(shipId);
+            List<VirtualLoadingResultDTO> results = vrLoadingService.getActiveSessions(shipId);
             return ApiResponse.success(results);
         } catch (Exception e) {
             return ApiResponse.error("获取活跃会话失败: " + e.getMessage());
@@ -81,7 +81,7 @@ public class VirtualLoadingController {
             @Parameter(description = "页码，从0开始") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") int size) {
         try {
-            Page<VirtualLoadingResultDTO> results = virtualLoadingService.getPublicSessions(page, size);
+            Page<VirtualLoadingResultDTO> results = vrLoadingService.getPublicSessions(page, size);
             return ApiResponse.success(results);
         } catch (Exception e) {
             return ApiResponse.error("获取公开会话失败: " + e.getMessage());
@@ -93,7 +93,7 @@ public class VirtualLoadingController {
     public ApiResponse<List<VirtualLoadingResultDTO>> getUserSessions(
             @Parameter(description = "用户ID") @PathVariable String userId) {
         try {
-            List<VirtualLoadingResultDTO> results = virtualLoadingService.getUserSessions(userId);
+            List<VirtualLoadingResultDTO> results = vrLoadingService.getUserSessions(userId);
             return ApiResponse.success(results);
         } catch (Exception e) {
             return ApiResponse.error("获取用户会话失败: " + e.getMessage());
@@ -106,7 +106,7 @@ public class VirtualLoadingController {
             @Parameter(description = "源会话ID") @PathVariable UUID id,
             @Parameter(description = "新会话名称") @RequestParam String newName) {
         try {
-            VirtualLoadingResultDTO result = virtualLoadingService.cloneSession(id, newName);
+            VirtualLoadingResultDTO result = vrLoadingService.cloneSession(id, newName);
             return ApiResponse.success("会话克隆成功", result);
         } catch (IllegalArgumentException e) {
             return ApiResponse.error(e.getMessage());
@@ -120,7 +120,7 @@ public class VirtualLoadingController {
     public ApiResponse<Void> closeSession(
             @Parameter(description = "会话ID") @PathVariable UUID id) {
         try {
-            virtualLoadingService.closeSession(id);
+            vrLoadingService.closeSession(id);
             return ApiResponse.success("会话已关闭", null);
         } catch (IllegalArgumentException e) {
             return ApiResponse.error(e.getMessage());

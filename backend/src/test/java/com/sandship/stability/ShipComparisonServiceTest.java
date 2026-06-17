@@ -3,7 +3,7 @@ package com.sandship.stability;
 import com.sandship.stability.dto.*;
 import com.sandship.stability.entity.*;
 import com.sandship.stability.repository.*;
-import com.sandship.stability.ship_comparison.ShipComparisonService;
+import com.sandship.stability.ship_comparator.ShipComparatorService;
 import com.sandship.stability.stability_simulator.StabilitySimulatorService;
 import com.sandship.stability.util.TestDataBuilder;
 import jakarta.persistence.EntityManager;
@@ -20,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
+import java.util.concurrent.Executor;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -44,8 +45,11 @@ class ShipComparisonServiceTest {
     @Mock
     private Query query;
 
+    @Mock
+    private Executor stabilityExecutor;
+
     @InjectMocks
-    private ShipComparisonService shipComparisonService;
+    private ShipComparatorService shipComparatorService;
 
     private Ship sandShip;
     private Ship fuChuan;
@@ -107,7 +111,7 @@ class ShipComparisonServiceTest {
             when(query.getSingleResult()).thenReturn("ANCIENT");
             when(query.setParameter(anyString(), any())).thenReturn(query);
 
-            ShipComparisonResultDTO result = shipComparisonService.compareShips(request);
+            ShipComparisonResultDTO result = shipComparatorService.compareShips(request);
 
             assertNotNull(result);
             assertEquals(3, result.getComparisonItems().size());
@@ -158,7 +162,7 @@ class ShipComparisonServiceTest {
             when(query.getSingleResult()).thenReturn("ANCIENT");
             when(query.setParameter(anyString(), any())).thenReturn(query);
 
-            ShipComparisonResultDTO result = shipComparisonService.compareShips(request);
+            ShipComparisonResultDTO result = shipComparatorService.compareShips(request);
 
             assertNotNull(result);
             assertEquals(2, result.getComparisonItems().size());
@@ -214,7 +218,7 @@ class ShipComparisonServiceTest {
                     .thenReturn(new BigDecimal("2.5"))
                     .thenReturn(new BigDecimal("12.0"));
 
-            ShipComparisonResultDTO result = shipComparisonService.compareShips(request);
+            ShipComparisonResultDTO result = shipComparatorService.compareShips(request);
 
             assertNotNull(result);
             assertEquals(2, result.getComparisonItems().size());
@@ -270,7 +274,7 @@ class ShipComparisonServiceTest {
                     .thenReturn("沙船", "福船", "广船", "散货船")
                     .thenReturn(new BigDecimal("2.5"), new BigDecimal("5.2"), new BigDecimal("4.8"), new BigDecimal("12.0"));
 
-            ShipComparisonResultDTO result = shipComparisonService.compareShips(request);
+            ShipComparisonResultDTO result = shipComparatorService.compareShips(request);
 
             assertEquals(4, result.getComparisonItems().size());
 
@@ -309,7 +313,7 @@ class ShipComparisonServiceTest {
                     .thenReturn("沙船", "福船")
                     .thenReturn(new BigDecimal("2.5"), new BigDecimal("5.2"));
 
-            ShipComparisonResultDTO result = shipComparisonService.compareShips(request);
+            ShipComparisonResultDTO result = shipComparatorService.compareShips(request);
 
             ShipComparisonResultDTO.ShipComparisonItem itemA = result.getComparisonItems().stream()
                     .filter(i -> i.getShipId().equals(sandShip.getId())).findFirst().orElseThrow();
@@ -362,7 +366,7 @@ class ShipComparisonServiceTest {
                     .thenReturn("沙船", "沙船")
                     .thenReturn(new BigDecimal("2.5"), new BigDecimal("2.5"));
 
-            ShipComparisonResultDTO result = shipComparisonService.compareShips(request);
+            ShipComparisonResultDTO result = shipComparatorService.compareShips(request);
 
             ShipComparisonResultDTO.ShipComparisonItem itemFast = result.getComparisonItems().stream()
                     .filter(i -> i.getShipId().equals(shipFast.getId())).findFirst().orElseThrow();
@@ -389,7 +393,7 @@ class ShipComparisonServiceTest {
             ShipComparisonRequest request = TestDataBuilder.buildShipComparisonRequest(Collections.emptyList());
 
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-                shipComparisonService.compareShips(request);
+                shipComparatorService.compareShips(request);
             });
 
             assertTrue(exception.getMessage().contains("不存在"), "异常信息应包含'不存在'");
@@ -408,7 +412,7 @@ class ShipComparisonServiceTest {
             when(shipRepository.findAllById(shipIds)).thenReturn(Collections.singletonList(sandShip));
 
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-                shipComparisonService.compareShips(request);
+                shipComparatorService.compareShips(request);
             });
 
             assertTrue(exception.getMessage().contains("不存在"), "异常信息应说明部分船舶不存在");
@@ -433,7 +437,7 @@ class ShipComparisonServiceTest {
                     .thenReturn("沙船")
                     .thenReturn(new BigDecimal("2.5"));
 
-            ShipComparisonResultDTO result = shipComparisonService.compareShips(request);
+            ShipComparisonResultDTO result = shipComparatorService.compareShips(request);
 
             assertNotNull(result);
             assertEquals(1, result.getComparisonItems().size());
@@ -453,7 +457,7 @@ class ShipComparisonServiceTest {
                     .thenThrow(new RuntimeException("模拟计算失败"));
 
             RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-                shipComparisonService.compareShips(request);
+                shipComparatorService.compareShips(request);
             });
 
             assertTrue(exception.getMessage().contains("船型对比失败"), "异常信息应包含'船型对比失败'");
@@ -489,7 +493,7 @@ class ShipComparisonServiceTest {
                     .thenReturn("沙船", "沙船")
                     .thenReturn(new BigDecimal("2.5"), new BigDecimal("2.5"));
 
-            ShipComparisonResultDTO result = shipComparisonService.compareShips(request);
+            ShipComparisonResultDTO result = shipComparatorService.compareShips(request);
 
             assertEquals(0, result.getComparisonItems().get(0).getScore()
                     .compareTo(result.getComparisonItems().get(1).getScore()),
@@ -519,7 +523,7 @@ class ShipComparisonServiceTest {
             when(shipComparisonRepository.findTop10ByOrderByCreatedAtDesc())
                     .thenReturn(Arrays.asList(comparison1, comparison2));
 
-            List<ShipComparisonResultDTO> history = shipComparisonService.getComparisonHistory(10);
+            List<ShipComparisonResultDTO> history = shipComparatorService.getComparisonHistory(10);
 
             assertEquals(2, history.size());
             assertEquals("对比1", history.get(0).getComparisonName());
@@ -532,7 +536,7 @@ class ShipComparisonServiceTest {
         void testGetAllHistory() {
             when(shipComparisonRepository.findAll()).thenReturn(Collections.emptyList());
 
-            List<ShipComparisonResultDTO> history = shipComparisonService.getComparisonHistory(0);
+            List<ShipComparisonResultDTO> history = shipComparatorService.getComparisonHistory(0);
 
             assertTrue(history.isEmpty());
             verify(shipComparisonRepository, times(1)).findAll();
@@ -546,7 +550,7 @@ class ShipComparisonServiceTest {
             when(shipComparisonRepository.findById(fakeId)).thenReturn(Optional.empty());
 
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-                shipComparisonService.getComparisonById(fakeId);
+                shipComparatorService.getComparisonById(fakeId);
             });
 
             assertTrue(exception.getMessage().contains("不存在"));
@@ -558,7 +562,7 @@ class ShipComparisonServiceTest {
             UUID id = UUID.randomUUID();
             when(shipComparisonRepository.existsById(id)).thenReturn(true);
 
-            assertDoesNotThrow(() -> shipComparisonService.deleteComparison(id));
+            assertDoesNotThrow(() -> shipComparatorService.deleteComparison(id));
             verify(shipComparisonRepository, times(1)).deleteById(id);
         }
 
@@ -569,7 +573,7 @@ class ShipComparisonServiceTest {
             when(shipComparisonRepository.existsById(fakeId)).thenReturn(false);
 
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-                shipComparisonService.deleteComparison(fakeId);
+                shipComparatorService.deleteComparison(fakeId);
             });
 
             assertTrue(exception.getMessage().contains("不存在"));

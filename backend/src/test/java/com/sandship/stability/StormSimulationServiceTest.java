@@ -3,7 +3,7 @@ package com.sandship.stability;
 import com.sandship.stability.dto.*;
 import com.sandship.stability.entity.*;
 import com.sandship.stability.repository.*;
-import com.sandship.stability.storm_simulation.StormSimulationService;
+import com.sandship.stability.storm_simulator.StormSimulatorService;
 import com.sandship.stability.stability_simulator.StabilitySimulatorService;
 import com.sandship.stability.util.TestDataBuilder;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
+import java.util.concurrent.Executor;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -36,8 +37,14 @@ class StormSimulationServiceTest {
     @Mock
     private StormSimulationRepository stormSimulationRepository;
 
+    @Mock
+    private Executor stabilityExecutor;
+
+    @Mock
+    private Executor stormSimExecutor;
+
     @InjectMocks
-    private StormSimulationService stormSimulationService;
+    private StormSimulatorService stormSimulatorService;
 
     private Ship sandShip;
     private Ship fuChuan;
@@ -65,7 +72,7 @@ class StormSimulationServiceTest {
             when(stormSimulationRepository.save(any(StormSimulation.class)))
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
-            StormSimulationResultDTO result = stormSimulationService.simulateStorm(sandShip.getId(), request);
+            StormSimulationResultDTO result = stormSimulatorService.simulateStorm(sandShip.getId(), request);
 
             assertNotNull(result);
             assertNotNull(result.getMaxRollAngleExperienced());
@@ -94,7 +101,7 @@ class StormSimulationServiceTest {
             when(stormSimulationRepository.save(any(StormSimulation.class)))
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
-            StormSimulationResultDTO result = stormSimulationService.simulateStorm(sandShip.getId(), request);
+            StormSimulationResultDTO result = stormSimulatorService.simulateStorm(sandShip.getId(), request);
 
             assertNotNull(result);
             assertTrue(result.getMaxRollAngleExperienced().compareTo(new BigDecimal("15")) > 0,
@@ -126,9 +133,9 @@ class StormSimulationServiceTest {
             when(stormSimulationRepository.save(any(StormSimulation.class)))
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
-            StormSimulationResultDTO normalResult = stormSimulationService.simulateStorm(
+            StormSimulationResultDTO normalResult = stormSimulatorService.simulateStorm(
                     testShip.getId(), normalRequest);
-            StormSimulationResultDTO resonanceResult = stormSimulationService.simulateStorm(
+            StormSimulationResultDTO resonanceResult = stormSimulatorService.simulateStorm(
                     testShip.getId(), resonanceRequest);
 
             assertNotNull(normalResult);
@@ -160,9 +167,9 @@ class StormSimulationServiceTest {
             when(stormSimulationRepository.save(any(StormSimulation.class)))
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
-            StormSimulationResultDTO sandResult = stormSimulationService.simulateStorm(
+            StormSimulationResultDTO sandResult = stormSimulatorService.simulateStorm(
                     sandShip.getId(), request);
-            StormSimulationResultDTO fuResult = stormSimulationService.simulateStorm(
+            StormSimulationResultDTO fuResult = stormSimulatorService.simulateStorm(
                     fuChuan.getId(), request);
 
             assertNotNull(sandResult);
@@ -201,7 +208,7 @@ class StormSimulationServiceTest {
             when(stormSimulationRepository.save(any(StormSimulation.class)))
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
-            StormSimulationResultDTO result = stormSimulationService.simulateStorm(
+            StormSimulationResultDTO result = stormSimulatorService.simulateStorm(
                     stableShip.getId(), request);
 
             assertNotNull(result);
@@ -228,7 +235,7 @@ class StormSimulationServiceTest {
             when(stormSimulationRepository.save(any(StormSimulation.class)))
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
-            StormSimulationResultDTO result = stormSimulationService.simulateStorm(
+            StormSimulationResultDTO result = stormSimulatorService.simulateStorm(
                     unstableShip.getId(), request);
 
             assertNotNull(result);
@@ -259,9 +266,9 @@ class StormSimulationServiceTest {
             when(stormSimulationRepository.save(any(StormSimulation.class)))
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
-            StormSimulationResultDTO highGmResult = stormSimulationService.simulateStorm(
+            StormSimulationResultDTO highGmResult = stormSimulatorService.simulateStorm(
                     highGmShip.getId(), request);
-            StormSimulationResultDTO lowGmResult = stormSimulationService.simulateStorm(
+            StormSimulationResultDTO lowGmResult = stormSimulatorService.simulateStorm(
                     lowGmShip.getId(), request);
 
             assertNotNull(highGmResult);
@@ -293,7 +300,7 @@ class StormSimulationServiceTest {
                 request.setMonteCarloIterations(5000);
                 request.setWindSpeed(new BigDecimal(wh * 3));
 
-                StormSimulationResultDTO result = stormSimulationService.simulateStorm(
+                StormSimulationResultDTO result = stormSimulatorService.simulateStorm(
                         testShip.getId(), request);
                 probabilities.add(result.getCapsizingProbability());
             }
@@ -324,7 +331,7 @@ class StormSimulationServiceTest {
             when(stormSimulationRepository.save(any(StormSimulation.class)))
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
-            StormSimulationResultDTO result = stormSimulationService.simulateStorm(
+            StormSimulationResultDTO result = stormSimulatorService.simulateStorm(
                     testShip.getId(), request);
 
             assertNotNull(result);
@@ -358,7 +365,7 @@ class StormSimulationServiceTest {
             when(stormSimulationRepository.save(any(StormSimulation.class)))
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
-            StormSimulationResultDTO result = stormSimulationService.simulateStorm(
+            StormSimulationResultDTO result = stormSimulatorService.simulateStorm(
                     testShip.getId(), request);
 
             BigDecimal minGM = result.getMinGmExperienced();
@@ -383,7 +390,7 @@ class StormSimulationServiceTest {
             when(shipRepository.findById(fakeId)).thenReturn(Optional.empty());
 
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-                stormSimulationService.simulateStorm(fakeId, request);
+                stormSimulatorService.simulateStorm(fakeId, request);
             });
 
             assertTrue(exception.getMessage().contains("船舶不存在"),
@@ -404,7 +411,7 @@ class StormSimulationServiceTest {
             when(stormSimulationRepository.save(any(StormSimulation.class)))
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
-            StormSimulationResultDTO result = stormSimulationService.simulateStorm(
+            StormSimulationResultDTO result = stormSimulatorService.simulateStorm(
                     sandShip.getId(), request);
 
             assertNotNull(result);
@@ -424,7 +431,7 @@ class StormSimulationServiceTest {
             when(stormSimulationRepository.save(any(StormSimulation.class)))
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
-            StormSimulationResultDTO result = stormSimulationService.simulateStorm(
+            StormSimulationResultDTO result = stormSimulatorService.simulateStorm(
                     sandShip.getId(), request);
 
             assertNotNull(result);
@@ -444,7 +451,7 @@ class StormSimulationServiceTest {
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
             assertDoesNotThrow(() -> {
-                stormSimulationService.simulateStorm(sandShip.getId(), request);
+                stormSimulatorService.simulateStorm(sandShip.getId(), request);
             }, "负浪高不应导致崩溃（应有合理处理）");
         }
 
@@ -462,7 +469,7 @@ class StormSimulationServiceTest {
             when(stormSimulationRepository.save(any(StormSimulation.class)))
                     .thenReturn(savedSimulation);
 
-            StormSimulationResultDTO result = stormSimulationService.simulateStorm(
+            StormSimulationResultDTO result = stormSimulatorService.simulateStorm(
                     sandShip.getId(), request);
 
             assertNotNull(result);
@@ -493,7 +500,7 @@ class StormSimulationServiceTest {
             when(stormSimulationRepository.findByShipIdOrderBySimulationTimeDesc(shipId))
                     .thenReturn(Arrays.asList(sim1, sim2));
 
-            List<StormSimulationResultDTO> history = stormSimulationService.getSimulationHistory(
+            List<StormSimulationResultDTO> history = stormSimulatorService.getSimulationHistory(
                     shipId, 10);
 
             assertEquals(2, history.size());
@@ -508,7 +515,7 @@ class StormSimulationServiceTest {
             when(stormSimulationRepository.findByShipIdOrderBySimulationTimeDesc(shipId))
                     .thenReturn(Collections.emptyList());
 
-            List<StormSimulationResultDTO> history = stormSimulationService.getSimulationHistory(
+            List<StormSimulationResultDTO> history = stormSimulatorService.getSimulationHistory(
                     shipId, 10);
 
             assertTrue(history.isEmpty());
@@ -521,7 +528,7 @@ class StormSimulationServiceTest {
             when(stormSimulationRepository.findById(fakeId)).thenReturn(Optional.empty());
 
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-                stormSimulationService.getSimulationById(fakeId);
+                stormSimulatorService.getSimulationById(fakeId);
             });
 
             assertTrue(exception.getMessage().contains("不存在"));
@@ -533,7 +540,7 @@ class StormSimulationServiceTest {
             UUID id = UUID.randomUUID();
             when(stormSimulationRepository.existsById(id)).thenReturn(true);
 
-            assertDoesNotThrow(() -> stormSimulationService.deleteSimulation(id));
+            assertDoesNotThrow(() -> stormSimulatorService.deleteSimulation(id));
             verify(stormSimulationRepository, times(1)).deleteById(id);
         }
 
@@ -544,7 +551,7 @@ class StormSimulationServiceTest {
             when(stormSimulationRepository.existsById(fakeId)).thenReturn(false);
 
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-                stormSimulationService.deleteSimulation(fakeId);
+                stormSimulatorService.deleteSimulation(fakeId);
             });
 
             assertTrue(exception.getMessage().contains("不存在"));
