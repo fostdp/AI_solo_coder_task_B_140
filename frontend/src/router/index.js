@@ -29,6 +29,21 @@ const routes = [
     path: '/history',
     name: 'history',
     component: () => import('@/views/HistoryData.vue')
+  },
+  {
+    path: '/ship-comparison',
+    name: 'ship-comparison',
+    component: () => import('@/views/ShipComparison.vue')
+  },
+  {
+    path: '/storm-simulation',
+    name: 'storm-simulation',
+    component: () => import('@/views/StormSimulation.vue')
+  },
+  {
+    path: '/virtual-loading',
+    name: 'virtual-loading',
+    component: () => import('@/views/VirtualLoading.vue')
   }
 ]
 

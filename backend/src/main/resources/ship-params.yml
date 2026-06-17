@@ -1,4 +1,4 @@
-# 古代沙船（方艄）船体参数配置
+# 古代与现代船型参数配置
 # 所有尺寸单位: 米 (m), 重量单位: 吨 (t)
 
 ship:
@@ -22,9 +22,14 @@ ship:
     # 设计吃水对应的稳心高度参考值
     design-metacentric-height: 0.85
 
-  # 沙船型谱 - 宋代典型尺寸
+  # 船型型谱 - 按船型分类
   spectrum:
+    # === 古代船型 ===
+    # 沙船（方艄）- 宋代典型平底船，近海航行
     fangshao-small:
+      ship-category: ANCIENT
+      ship-family: 沙船
+      ship-variant: 小型方艄
       length-overall: 30.0
       breadth-molded: 8.0
       depth-molded: 2.8
@@ -32,8 +37,17 @@ ship:
       displacement: 320.0
       lightship-weight: 140.0
       deadweight-tons: 180.0
+      block-coefficient: 0.68
+      roll-radius-coefficient: 0.36
+      bow-height: 2.2
+      stern-height: 2.5
+      watertight-bulkheads: 8
+      historical-period: 宋代
 
     fangshao-medium:
+      ship-category: ANCIENT
+      ship-family: 沙船
+      ship-variant: 中型方艄
       length-overall: 35.0
       breadth-molded: 9.5
       depth-molded: 3.2
@@ -41,8 +55,17 @@ ship:
       displacement: 420.0
       lightship-weight: 180.0
       deadweight-tons: 240.0
+      block-coefficient: 0.66
+      roll-radius-coefficient: 0.35
+      bow-height: 2.6
+      stern-height: 2.9
+      watertight-bulkheads: 10
+      historical-period: 宋代
 
     fangshao-large:
+      ship-category: ANCIENT
+      ship-family: 沙船
+      ship-variant: 大型方艄
       length-overall: 38.0
       breadth-molded: 10.0
       depth-molded: 3.5
@@ -50,10 +73,170 @@ ship:
       displacement: 520.0
       lightship-weight: 210.0
       deadweight-tons: 310.0
+      block-coefficient: 0.65
+      roll-radius-coefficient: 0.35
+      bow-height: 2.8
+      stern-height: 3.1
+      watertight-bulkheads: 12
+      historical-period: 宋代
 
-  # 货舱标准布局参数
+    # 福船 - 明代福建尖底海船，远洋航行，抗风浪能力强
+    fuchuan-small:
+      ship-category: ANCIENT
+      ship-family: 福船
+      ship-variant: 小型福船
+      length-overall: 33.0
+      breadth-molded: 7.5
+      depth-molded: 4.0
+      design-draft: 2.8
+      displacement: 380.0
+      lightship-weight: 170.0
+      deadweight-tons: 210.0
+      block-coefficient: 0.52
+      roll-radius-coefficient: 0.38
+      bow-height: 5.2
+      stern-height: 4.8
+      watertight-bulkheads: 12
+      historical-period: 明代
+
+    fuchuan-medium:
+      ship-category: ANCIENT
+      ship-family: 福船
+      ship-variant: 中型福船
+      length-overall: 42.0
+      breadth-molded: 9.0
+      depth-molded: 5.0
+      design-draft: 3.5
+      displacement: 650.0
+      lightship-weight: 290.0
+      deadweight-tons: 360.0
+      block-coefficient: 0.50
+      roll-radius-coefficient: 0.39
+      bow-height: 6.5
+      stern-height: 5.8
+      watertight-bulkheads: 14
+      historical-period: 明代
+
+    fuchuan-large:
+      ship-category: ANCIENT
+      ship-family: 福船
+      ship-variant: 大型福船（宝船级）
+      length-overall: 60.0
+      breadth-molded: 13.0
+      depth-molded: 6.5
+      design-draft: 4.8
+      displacement: 1800.0
+      lightship-weight: 800.0
+      deadweight-tons: 1000.0
+      block-coefficient: 0.48
+      roll-radius-coefficient: 0.40
+      bow-height: 8.5
+      stern-height: 7.5
+      watertight-bulkheads: 16
+      historical-period: 明代郑和下西洋
+
+    # 广船 - 广东尖底海船，硬度高，抗撞性好
+    guangchuan-small:
+      ship-category: ANCIENT
+      ship-family: 广船
+      ship-variant: 小型广船
+      length-overall: 28.0
+      breadth-molded: 6.5
+      depth-molded: 3.8
+      design-draft: 2.6
+      displacement: 280.0
+      lightship-weight: 130.0
+      deadweight-tons: 150.0
+      block-coefficient: 0.48
+      roll-radius-coefficient: 0.37
+      bow-height: 4.5
+      stern-height: 4.2
+      watertight-bulkheads: 10
+      historical-period: 明代
+
+    guangchuan-medium:
+      ship-category: ANCIENT
+      ship-family: 广船
+      ship-variant: 中型广船
+      length-overall: 36.0
+      breadth-molded: 8.0
+      depth-molded: 4.6
+      design-draft: 3.2
+      displacement: 480.0
+      lightship-weight: 220.0
+      deadweight-tons: 260.0
+      block-coefficient: 0.46
+      roll-radius-coefficient: 0.38
+      bow-height: 5.8
+      stern-height: 5.2
+      watertight-bulkheads: 12
+      historical-period: 明代
+
+    # === 现代船型 ===
+    # 现代散货船 - Handysize型
+    modern-bulk-handysize:
+      ship-category: MODERN
+      ship-family: 散货船
+      ship-variant: Handysize (35000DWT)
+      length-overall: 180.0
+      breadth-molded: 30.0
+      depth-molded: 15.0
+      design-draft: 10.0
+      displacement: 45000.0
+      lightship-weight: 10000.0
+      deadweight-tons: 35000.0
+      block-coefficient: 0.82
+      roll-radius-coefficient: 0.45
+      bow-height: 18.0
+      stern-height: 16.0
+      watertight-bulkheads: 7
+      historical-period: 现代
+
+    # 现代散货船 - Panamax型
+    modern-bulk-panamax:
+      ship-category: MODERN
+      ship-family: 散货船
+      ship-variant: Panamax (75000DWT)
+      length-overall: 225.0
+      breadth-molded: 32.2
+      depth-molded: 18.5
+      design-draft: 12.5
+      displacement: 90000.0
+      lightship-weight: 15000.0
+      deadweight-tons: 75000.0
+      block-coefficient: 0.83
+      roll-radius-coefficient: 0.45
+      bow-height: 22.0
+      stern-height: 20.0
+      watertight-bulkheads: 9
+      historical-period: 现代
+
+    # 现代散货船 - Capsize型（超巴拿马）
+    modern-bulk-capesize:
+      ship-category: MODERN
+      ship-family: 散货船
+      ship-variant: Capesize (180000DWT)
+      length-overall: 290.0
+      breadth-molded: 45.0
+      depth-molded: 24.0
+      design-draft: 16.5
+      displacement: 220000.0
+      lightship-weight: 40000.0
+      deadweight-tons: 180000.0
+      block-coefficient: 0.84
+      roll-radius-coefficient: 0.46
+      bow-height: 28.0
+      stern-height: 25.0
+      watertight-bulkheads: 11
+      historical-period: 现代
+
+  # 货舱标准布局参数（按船型分类）
   cargo-holds:
-    standard-count: 4
+    standard-count:
+      shachuan: 4
+      fuchuan: 6
+      guangchuan: 5
+      modern-bulk: 9
     capacity-per-hold:
       small: 85.0
       medium: 95.0

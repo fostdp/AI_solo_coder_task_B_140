@@ -34,36 +34,61 @@
         <el-aside width="220px" class="sidebar">
           <el-menu
             :default-active="activeMenu"
+            :default-openeds="['main', 'extended']"
             class="side-menu"
             background-color="transparent"
             text-color="#ffffff"
             active-text-color="#409EFF"
             @select="onMenuSelect"
           >
-            <el-menu-item index="dashboard">
-              <el-icon><DataAnalysis /></el-icon>
-              <span>实时监控</span>
-            </el-menu-item>
-            <el-menu-item index="3d-view">
-              <el-icon><View /></el-icon>
-              <span>三维视窗</span>
-            </el-menu-item>
-            <el-menu-item index="stability">
-              <el-icon><TrendCharts /></el-icon>
-              <span>稳性分析</span>
-            </el-menu-item>
-            <el-menu-item index="loading">
-              <el-icon><Box /></el-icon>
-              <span>装载优化</span>
-            </el-menu-item>
-            <el-menu-item index="history">
-              <el-icon><Histogram /></el-icon>
-              <span>历史数据</span>
-            </el-menu-item>
+            <el-sub-menu index="main">
+              <template #title>
+                <el-icon><Operation /></el-icon>
+                <span>核心功能</span>
+              </template>
+              <el-menu-item index="dashboard">
+                <el-icon><DataAnalysis /></el-icon>
+                <span>实时监控</span>
+              </el-menu-item>
+              <el-menu-item index="3d-view">
+                <el-icon><View /></el-icon>
+                <span>三维视窗</span>
+              </el-menu-item>
+              <el-menu-item index="stability">
+                <el-icon><TrendCharts /></el-icon>
+                <span>稳性分析</span>
+              </el-menu-item>
+              <el-menu-item index="loading">
+                <el-icon><Box /></el-icon>
+                <span>装载优化</span>
+              </el-menu-item>
+              <el-menu-item index="history">
+                <el-icon><Histogram /></el-icon>
+                <span>历史数据</span>
+              </el-menu-item>
+            </el-sub-menu>
+            <el-sub-menu index="extended">
+              <template #title>
+                <el-icon><MagicStick /></el-icon>
+                <span>扩展体验</span>
+              </template>
+              <el-menu-item index="ship-comparison">
+                <el-icon><Rank /></el-icon>
+                <span>船型对比</span>
+              </el-menu-item>
+              <el-menu-item index="storm-simulation">
+                <el-icon><Lightning /></el-icon>
+                <span>风暴模拟</span>
+              </el-menu-item>
+              <el-menu-item index="virtual-loading">
+                <el-icon><Goods /></el-icon>
+                <span>虚拟装载</span>
+              </el-menu-item>
+            </el-sub-menu>
           </el-menu>
         </el-aside>
 
-        <el-main class="main-content">
+        <el-main class="main-content">, Operation, MagicStick, Rank, Lightning, Goods
           <router-view v-slot="{ Component }">
             <transition name="fade" mode="out-in">
               <component :is="Component" :ship-id="currentShipId" :key="currentShipId" />
@@ -88,7 +113,7 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Ship, Warning, DataAnalysis, View, TrendCharts, Box, Histogram } from '@element-plus/icons-vue'
+import { Ship, Warning, DataAnalysis, View, TrendCharts, Box, Histogram, Operation, MagicStick, Rank, Lightning, Goods } from '@element-plus/icons-vue'
 import { getShips } from '@/api/ship'
 import { getUnacknowledgedCount } from '@/api/alarm'
 import { useWebSocket } from '@/composables/useWebSocket'

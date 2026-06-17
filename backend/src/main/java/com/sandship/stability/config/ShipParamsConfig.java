@@ -39,6 +39,9 @@ public class ShipParamsConfig {
 
     @Data
     public static class ShipSpectrum {
+        private String shipCategory;
+        private String shipFamily;
+        private String shipVariant;
         private BigDecimal lengthOverall;
         private BigDecimal breadthMolded;
         private BigDecimal depthMolded;
@@ -46,11 +49,17 @@ public class ShipParamsConfig {
         private BigDecimal displacement;
         private BigDecimal lightshipWeight;
         private BigDecimal deadweightTons;
+        private BigDecimal blockCoefficient;
+        private BigDecimal rollRadiusCoefficient;
+        private BigDecimal bowHeight;
+        private BigDecimal sternHeight;
+        private Integer watertightBulkheads;
+        private String historicalPeriod;
     }
 
     @Data
     public static class CargoHoldsParams {
-        private int standardCount;
+        private Map<String, Integer> standardCount;
         private Map<String, BigDecimal> capacityPerHold;
     }
 
